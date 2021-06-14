@@ -1,0 +1,11 @@
+{
+  "auth": {
+    "hhlwebclientc1b27f37": {
+      "service": "Cognito",
+      "serviceType": "imported",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  }
+}

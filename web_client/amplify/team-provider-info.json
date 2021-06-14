@@ -1,0 +1,25 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-hhlwebclient-dev-201456-authRole",
+      "UnauthRoleArn": "arn:aws:iam::030466745493:role/amplify-hhlwebclient-dev-201456-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::030466745493:role/amplify-hhlwebclient-dev-201456-authRole",
+      "Region": "ap-northeast-2",
+      "DeploymentBucketName": "amplify-hhlwebclient-dev-201456-deployment",
+      "UnauthRoleName": "amplify-hhlwebclient-dev-201456-unauthRole",
+      "StackName": "amplify-hhlwebclient-dev-201456",
+      "StackId": "arn:aws:cloudformation:ap-northeast-2:030466745493:stack/amplify-hhlwebclient-dev-201456/c1ccd4e0-cd01-11eb-bfba-06732b0bcd0e",
+      "AmplifyAppId": "d1ueylg34g5jt5"
+    },
+    "categories": {
+      "auth": {
+        "hhlwebclientc1b27f37": {
+          "userPoolId": "ap-northeast-2_3qWDOyBJ5",
+          "userPoolName": "HouseholdLedgerUsers",
+          "webClientId": "2o2qdt71u9qlgtjdc8d6q94huc",
+          "nativeClientId": "2o2qdt71u9qlgtjdc8d6q94huc"
+        }
+      }
+    }
+  }
+}
