@@ -1,0 +1,14 @@
+[package]
+authors = ["Jaeyong Choi <jayong93@gmail.com>"]
+edition = "2018"
+name = "hhl_load_data"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hhl_db_accessor = {path = "../hhl_db_accessor"}
+lambda_http = "0.3.0"
+lambda_runtime = "0.3.0"
+tokio = {version = "1", features=["full"]}
+serde_json = "*"
