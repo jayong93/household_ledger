@@ -1,9 +1,9 @@
 use lambda_http::{
     handler,
     lambda_runtime::{self, Context, Error},
-    Request, RequestExt,
+    Request, RequestExt, Response,
 };
-use serde_json::{json, Value};
+use serde_json::json;
 use tokio;
 
 #[tokio::main]
@@ -12,9 +12,11 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-async fn func(req: Request, _: Context) -> Result<Value, Error> {
+async fn func(req: Request, _: Context) -> Result<Response<String>, Error> {
     let query_param = req.query_string_parameters();
     let first_name = query_param.get("name").unwrap_or("Test");
 
-    Ok(json!({ "message": format!("Hello, {}!", first_name) }))
+    Ok(Response::builder()
+        .header("Access-Control-Allow-Origin", "*")
+        .body(json!({ "message": format!("Hello, {}!", first_name) }).to_string())?)
 }
