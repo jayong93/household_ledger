@@ -162,3 +162,7 @@ pub async fn load_data(
         .map(|item| item.try_into())
         .collect())
 }
+
+pub fn create_client() -> dynamodb::Client {
+    dynamodb::Client::from_env()
+}
