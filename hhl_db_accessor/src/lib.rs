@@ -150,8 +150,7 @@ pub async fn load_data(
             )
             .expression_attribute_values(":timeend", AttributeValue::N(time_range.end.to_string()));
     } else {
-        query = query
-            .key_condition_expression("year_month = :ym_val")
+        query = query.key_condition_expression("year_month = :ym_val")
     }
     let result = query.send().await?;
 
