@@ -11,3 +11,4 @@ hhl_db_accessor = {path = "../hhl_db_accessor"}
 lambda_http = "0.3.0"
 lambda_runtime = "0.3.0"
 tokio = {version = "1", features=["full"]}
+serde_json = "*"
