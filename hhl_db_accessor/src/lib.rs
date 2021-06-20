@@ -20,8 +20,8 @@ pub struct Data {
     timestamp: u64,
     name: String,
     change: i64,
-    memo: String,
-    tag: String,
+    memo: Option<String>,
+    tag: Option<String>,
 }
 
 impl Data {
@@ -30,8 +30,8 @@ impl Data {
         timestamp: u64,
         name: String,
         change: i64,
-        memo: String,
-        tag: String,
+        memo: Option<String>,
+        tag: Option<String>,
     ) -> Self {
         Self {
             year_month,
@@ -75,8 +75,8 @@ impl TryFrom<HashMap<String, AttributeValue>> for Data {
         let timestamp = extract_attribute(&mut value, "timestamp")?;
         let name = extract_attribute(&mut value, "name")?;
         let change = extract_attribute(&mut value, "change")?;
-        let memo = extract_attribute(&mut value, "memo")?;
-        let tag = extract_attribute(&mut value, "tag")?;
+        let memo = extract_attribute(&mut value, "memo").ok();
+        let tag = extract_attribute(&mut value, "tag").ok();
 
         Ok(Self {
             year_month,
@@ -102,8 +102,22 @@ impl From<Data> for HashMap<String, AttributeValue> {
             ),
             ("name".into(), AttributeValue::S(data.name)),
             ("change".into(), AttributeValue::N(data.change.to_string())),
-            ("memo".into(), AttributeValue::S(data.memo)),
-            ("tag".into(), AttributeValue::S(data.tag)),
+            (
+                "memo".into(),
+                if let Some(s) = data.memo {
+                    AttributeValue::S(s)
+                } else {
+                    AttributeValue::Null(true)
+                },
+            ),
+            (
+                "tag".into(),
+                if let Some(s) = data.tag {
+                    AttributeValue::S(s)
+                } else {
+                    AttributeValue::Null(true)
+                },
+            ),
         ];
         data_pair_arr.into_iter().collect()
     }

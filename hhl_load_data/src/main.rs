@@ -9,7 +9,15 @@ use tokio;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    lambda_runtime::run(handler(func)).await?;
+    let print_err = |req, ctx| async {
+        let ret = func(req, ctx).await;
+        if let Err(err) = ret.as_ref() {
+            println!("Error: {:?}", err);
+        }
+        ret
+    };
+
+    lambda_runtime::run(handler(print_err)).await?;
     Ok(())
 }
 

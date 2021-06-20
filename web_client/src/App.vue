@@ -2,6 +2,8 @@
   <v-app>
     <v-app-bar app dense dark>
       <div class="d-flex align-center">가계부</div>
+      <v-spacer></v-spacer>
+      <amplify-sign-out></amplify-sign-out>
     </v-app-bar>
 
     <v-main>
@@ -38,8 +40,6 @@
                 {{ $refs.calendar.title }}
               </v-toolbar-title>
               <v-spacer></v-spacer>
-              <amplify-sign-out></amplify-sign-out>
-              <v-spacer></v-spacer>
               <v-menu bottom right>
                 <template v-slot:activator="{ on, attrs }">
                   <v-btn
@@ -74,6 +74,9 @@
               ref="calendar"
               v-model="focus"
               color="primary"
+              locale="ko-KR"
+              event-overlap-mode="column"
+              event-overlap-threshold=30
               :events="events"
               :event-color="getEventColor"
               :type="type"
@@ -117,6 +120,20 @@
           </v-sheet>
         </v-col>
       </v-row>
+      <v-row align="stretch" justify="space-around">
+        <v-col align-self="center"> Import Data </v-col>
+        <v-col>
+          <v-file-input
+            ref="file_input"
+            chips
+            small-chips
+            @change="selectFile"
+          ></v-file-input>
+        </v-col>
+        <v-col align-self="center">
+          <v-btn v-if="selectedFile !== null" @click="saveData">Import</v-btn>
+        </v-col>
+      </v-row>
     </v-main>
   </v-app>
 </template>
@@ -126,6 +143,7 @@ import "regenerator-runtime/runtime";
 import "@aws-amplify/ui-vue";
 import { onAuthUIStateChange } from "@aws-amplify/ui-components";
 import axios from "axios";
+const parse = require("csv-parse");
 
 export default {
   name: "App",
@@ -137,9 +155,11 @@ export default {
     });
   },
   data: () => ({
+    cached_data: {},
     authState: undefined,
     user: undefined,
     unsubscribeAuth: undefined,
+    cur_start: Date.now(),
     focus: "",
     type: "month",
     typeToLabel: {
@@ -151,11 +171,9 @@ export default {
     selectedEvent: {},
     selectedElement: null,
     selectedOpen: false,
+    selectedFile: null,
     events: [],
   }),
-  mounted() {
-    this.$refs.calendar.checkChange();
-  },
   methods: {
     viewDay({ date }) {
       this.focus = date;
@@ -192,43 +210,115 @@ export default {
       nativeEvent.stopPropagation();
     },
     updateRange({ start, end }) {
+      this.cur_start = start;
       this.load_data(start, end);
     },
     load_data(start) {
-      axios
-        .get(
-          "https://51c22t1aba.execute-api.ap-northeast-2.amazonaws.com/test",
-          {
-            headers: {
-              Authorization:
-                "Bearer " + this.user.signInUserSession.idToken.jwtToken,
-            },
-            params: {
-              year_month: `${start.year}${start.month
-                .toString()
-                .padStart(2, 0)}`,
-            },
-          }
-        )
-        .then(({status, data}) => {
-          if (status == 200) {
-            const events = []
-            data.forEach(({timestamp, name, change, tag, memo}) => {
-              const time =new Date(timestamp * 1000) 
-              events.push({
-                name: `${change}; ${name}`,
-                start: time,
-                timed: true,
-                color: change < 0 ? "blue" : "red",
-                category: tag,
-                details: `시간: ${time.toLocaleString('ko-KR')}` + "\n" +
-                `태그: ${tag}` + "\n" +
-                `메모: ${memo}`
-              })
-            })
-            this.events = events
+      const year_month = `${start.year}${start.month
+        .toString()
+        .padStart(2, 0)}`;
+
+      const cached_data = this.cached_data[year_month];
+      if (cached_data !== undefined) {
+        this.events = cached_data;
+      } else {
+        const events = [];
+        axios
+          .get(
+            "https://51c22t1aba.execute-api.ap-northeast-2.amazonaws.com/test",
+            {
+              headers: {
+                Authorization:
+                  "Bearer " + this.user.signInUserSession.idToken.jwtToken,
+              },
+              params: {
+                year_month: year_month,
+              },
+            }
+          )
+          .then(({ status, data }) => {
+            if (status == 200) {
+              data.forEach(({ timestamp, name, change, tag, memo }) => {
+                const time = new Date(timestamp * 1000);
+                events.push({
+                  name: `${change}; ${name}`,
+                  start: time,
+                  timed: true,
+                  color: change < 0 ? "blue" : "red",
+                  category: tag,
+                  details:
+                    `시간: ${time.toLocaleString("ko-KR")}` +
+                    "\n" +
+                    `태그: ${tag}` +
+                    "\n" +
+                    `메모: ${memo}`,
+                });
+              });
+              this.cached_data[year_month] = events;
+              this.events = events;
+            }
+          });
+      }
+    },
+    saveData() {
+      const reader = new FileReader();
+      const authToken = this.user.signInUserSession.idToken.jwtToken;
+      const timestamp_regex = /(\d+)\.(\d+)\.(\d+)\s+(\d+):(\d+):(\d+)/;
+      reader.onload = function () {
+        parse(reader.result, {}, function (err, output) {
+          if (!err) {
+            let body = [];
+            for (var i = 1; i < output.length; ++i) {
+              let data = {};
+              for (var j = 0; j < output[0].length; ++j) {
+                if (output[i][j].length == 0) {
+                  continue;
+                }
+                if (output[0][j] == "timestamp") {
+                  const match = output[i][j].match(timestamp_regex);
+                  const date = new Date(
+                    Date.parse(
+                      `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6]}.000+09:00`
+                    )
+                  );
+                  data[output[0][j]] = date.getTime() / 1000;
+                  data["year_month"] =
+                    date.getFullYear() * 100 + date.getMonth() + 1;
+                } else if (output[0][j] == "change") {
+                  data[output[0][j]] = parseInt(
+                    output[i][j].replaceAll(",", "")
+                  );
+                } else {
+                  data[output[0][j]] = output[i][j];
+                }
+              }
+              body.push(data);
+            }
+            console.log(body);
+            axios
+              .post(
+                "https://51c22t1aba.execute-api.ap-northeast-2.amazonaws.com/test",
+                JSON.stringify(body),
+                {
+                  headers: {
+                    Authorization: "Bearer " + authToken,
+                    "Content-Type": "application/json",
+                  },
+                }
+              )
+              .then(function ({ status }) {
+                if (status == 200) {
+                  this.cached_data = {};
+                  this.load_data(this.cur_start);
+                }
+              });
           }
         });
+      };
+      reader.readAsText(this.selectedFile);
+    },
+    selectFile(file) {
+      this.selectedFile = file;
     },
     beforeDestroy() {
       this.unsubscribeAuth();
