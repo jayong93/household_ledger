@@ -3,7 +3,9 @@
     <v-app-bar app dense dark>
       <div class="d-flex align-center">가계부</div>
       <v-spacer></v-spacer>
+      <span v-if="typeof user !== 'undefined'">
       <amplify-sign-out></amplify-sign-out>
+      </span>
     </v-app-bar>
 
     <v-main>
@@ -18,7 +20,7 @@
           </amplify-auth-container>
         </v-col>
       </v-row>
-      <v-row class="fill-height" v-if="typeof user !== 'undefined'">
+      <v-row class="mb-2" v-if="typeof user !== 'undefined'">
         <v-col>
           <v-sheet height="64">
             <v-toolbar flat>
@@ -75,8 +77,8 @@
               v-model="focus"
               color="primary"
               locale="ko-KR"
-              event-overlap-mode="column"
-              event-overlap-threshold=30
+              :event-overlap-mode="overlap_mode"
+              :event-overlap-threshold="1"
               :events="events"
               :event-color="getEventColor"
               :type="type"
@@ -120,20 +122,20 @@
           </v-sheet>
         </v-col>
       </v-row>
-      <v-row align="stretch" justify="space-around">
-        <v-col align-self="center"> Import Data </v-col>
-        <v-col>
-          <v-file-input
-            ref="file_input"
-            chips
-            small-chips
-            @change="selectFile"
-          ></v-file-input>
-        </v-col>
-        <v-col align-self="center">
+      <div class="d-flex justify-center">
+        <v-card class="d-flex px-4 py-2 mx-10 outlined align-center flex-grow-1">
+          <span> Import Data </span>
+          <span class="flex-grow-1 mr-5 ml-2">
+            <v-file-input
+              ref="file_input"
+              chips
+              small-chips
+              @change="selectFile"
+            ></v-file-input>
+          </span>
           <v-btn v-if="selectedFile !== null" @click="saveData">Import</v-btn>
-        </v-col>
-      </v-row>
+        </v-card>
+      </div>
     </v-main>
   </v-app>
 </template>
@@ -159,6 +161,7 @@ export default {
     authState: undefined,
     user: undefined,
     unsubscribeAuth: undefined,
+    overlap_mode: "column",
     cur_start: Date.now(),
     focus: "",
     type: "month",
