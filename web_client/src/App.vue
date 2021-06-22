@@ -122,22 +122,34 @@
           </v-sheet>
         </v-col>
       </v-row>
-      <div class="d-flex justify-center">
-        <v-card class="d-flex px-4 mx-10 outlined align-center" :class="open_import_card ? 'flex-grow-1' : ''">
-          <span @click="open_import_card = !open_import_card"> Import Data </span>
-          <div class="d-flex flex-grow-1 align-center" v-if="open_import_card">
-            <span class="flex-grow-1 mr-5 ml-2">
-              <v-file-input
-                ref="file_input"
-                chips
-                small-chips
-                @change="selectFile"
-              ></v-file-input>
-            </span>
-            <v-btn v-if="selectedFile !== null" @click="saveData">Import</v-btn>
-          </div>
-        </v-card>
-      </div>
+      <v-container>
+        <v-row dense justify="center" align="center">
+          <v-col cols="auto" align-self="center">
+            <v-card class="mx-auto">
+              <v-btn @click="toggleImport">{{
+                open_import_card ? "Close" : "Import Data"
+              }}</v-btn>
+            </v-card>
+          </v-col>
+          <v-expand-transition>
+            <v-col cols="5" v-if="open_import_card" align-self="center">
+              <v-card-actions>
+                <v-file-input
+                  class="mr-2"
+                  ref="file_input"
+                  chips
+                  small-chips
+                  @change="selectFile"
+                ></v-file-input>
+                <v-btn
+                 :disabled="selectedFile === null"
+                 @click="saveData"
+                >Import</v-btn>
+              </v-card-actions>
+            </v-col>
+          </v-expand-transition>
+        </v-row>
+      </v-container>
     </v-main>
   </v-app>
 </template>
@@ -271,6 +283,7 @@ export default {
       const reader = new FileReader();
       const authToken = this.user.signInUserSession.idToken.jwtToken;
       const timestamp_regex = /(\d+)\.(\d+)\.(\d+)\s+(\d+):(\d+):(\d+)/;
+      let vm = this;
       reader.onload = function () {
         parse(reader.result, {}, function (err, output) {
           if (!err) {
@@ -314,10 +327,12 @@ export default {
                 }
               )
               .then(function ({ status }) {
+                console.log(vm);
                 if (status == 200) {
-                  this.cached_data = {};
-                  this.load_data(this.cur_start);
-                  this.open_import_card = false;
+                  vm.cached_data = {};
+                  vm.load_data(vm.cur_start);
+                  vm.open_import_card = false;
+                  vm.selectedFile = null;
                 }
               });
           }
@@ -330,6 +345,10 @@ export default {
     },
     beforeDestroy() {
       this.unsubscribeAuth();
+    },
+    toggleImport() {
+      this.selectedFile = null;
+      this.open_import_card = !this.open_import_card;
     },
   },
 };
