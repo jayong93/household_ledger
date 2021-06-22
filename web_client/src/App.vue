@@ -4,7 +4,7 @@
       <div class="d-flex align-center">가계부</div>
       <v-spacer></v-spacer>
       <span v-if="typeof user !== 'undefined'">
-      <amplify-sign-out></amplify-sign-out>
+        <amplify-sign-out></amplify-sign-out>
       </span>
     </v-app-bar>
 
@@ -123,17 +123,19 @@
         </v-col>
       </v-row>
       <div class="d-flex justify-center">
-        <v-card class="d-flex px-4 py-2 mx-10 outlined align-center flex-grow-1">
-          <span> Import Data </span>
-          <span class="flex-grow-1 mr-5 ml-2">
-            <v-file-input
-              ref="file_input"
-              chips
-              small-chips
-              @change="selectFile"
-            ></v-file-input>
-          </span>
-          <v-btn v-if="selectedFile !== null" @click="saveData">Import</v-btn>
+        <v-card class="d-flex px-4 mx-10 outlined align-center" :class="open_import_card ? 'flex-grow-1' : ''">
+          <span @click="open_import_card = !open_import_card"> Import Data </span>
+          <div class="d-flex flex-grow-1 align-center" v-if="open_import_card">
+            <span class="flex-grow-1 mr-5 ml-2">
+              <v-file-input
+                ref="file_input"
+                chips
+                small-chips
+                @change="selectFile"
+              ></v-file-input>
+            </span>
+            <v-btn v-if="selectedFile !== null" @click="saveData">Import</v-btn>
+          </div>
         </v-card>
       </div>
     </v-main>
@@ -176,6 +178,7 @@ export default {
     selectedOpen: false,
     selectedFile: null,
     events: [],
+    open_import_card: false,
   }),
   methods: {
     viewDay({ date }) {
@@ -246,6 +249,7 @@ export default {
                 events.push({
                   name: `${change}; ${name}`,
                   start: time,
+                  end: new Date((timestamp + 1800) * 1000),
                   timed: true,
                   color: change < 0 ? "blue" : "red",
                   category: tag,
@@ -313,6 +317,7 @@ export default {
                 if (status == 200) {
                   this.cached_data = {};
                   this.load_data(this.cur_start);
+                  this.open_import_card = false;
                 }
               });
           }
